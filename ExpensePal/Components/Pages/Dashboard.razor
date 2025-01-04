@@ -32,11 +32,10 @@
             <div class="dashboard-header">
                 <h5>Transactions</h5>
                 <div>
-                    <button class="btn btn-primary" @onclick="ShowHighest">Show Top 5 Highest</button>
-                    <button class="btn btn-secondary" @onclick="ShowLowest">Show Top 5 Lowest</button>
+                    <button class="btn btn-primary" @onclick="ShowHighestTransactions">Show Top 5 Highest</button>
+                    <button class="btn btn-secondary" @onclick="ShowLowestTransactions">Show Top 5 Lowest</button>
                 </div>
                 <div>
-                    <!-- Date Range Filter for Transactions -->
                     <label>Start Date: </label>
                     <input type="date" @bind="StartDateTransaction" />
                     <label>End Date: </label>
@@ -78,17 +77,18 @@
         <div class="dashboard-section">
             <div class="dashboard-header">
                 <h5>Debts</h5>
-                <div>
-                    <button class="btn btn-primary" @onclick="ShowOverdue">Show Overdue Debts First</button>
-                    <button class="btn btn-secondary" @onclick="ShowAllDebts">Show All Debts</button>
+                <div class="d-flex flex-wrap gap-2 mt-2">
+                    <button class="btn btn-primary flex-grow-1" @onclick="ShowHighestDebts">Top 5 Highest</button>
+                    <button class="btn btn-secondary flex-grow-1" @onclick="ShowLowestDebts">Top 5 Lowest</button>
+                    <button class="btn btn-secondary flex-grow-1" @onclick="ShowOverdue">Overdue Debts</button>
+                    <button class="btn btn-secondary flex-grow-1" @onclick="ShowAllDebts">All Debts</button>
                 </div>
-                <div>
-                    <!-- Date Range Filter for Debts -->
-                    <label>Start Date: </label>
-                    <input type="date" @bind="StartDateDebt" />
-                    <label>End Date: </label>
-                    <input type="date" @bind="EndDateDebt" />
-                    <button class="btn btn-info" @onclick="FilterDebtsByDate">Filter</button>
+                <div class="mt-3">
+                    <label class="me-2">Start Date:</label>
+                    <input type="date" class="form-control d-inline-block w-auto" @bind="StartDateDebt" />
+                    <label class="ms-3 me-2">End Date:</label>
+                    <input type="date" class="form-control d-inline-block w-auto" @bind="EndDateDebt" />
+                    <button class="btn btn-info ms-3" @onclick="FilterDebtsByDate">Filter</button>
                 </div>
             </div>
             <div class="debt-list mt-4">
@@ -134,41 +134,33 @@
     public decimal TotalExpense => totalExpense;
     public decimal TotalDebt => totalDebt;
 
-    // Property for available balance
     public decimal AvailableBalance => TotalIncome + TotalDebt - TotalExpense;
 
-    // Define the path to the JSON files
     private static readonly string TransactionFilePath = Path.Combine(FileSystem.AppDataDirectory, "transaction.json");
     private static readonly string DebtFilePath = Path.Combine(FileSystem.AppDataDirectory, "debt.json");
 
-    // Date Range for Transactions
     private DateTime? StartDateTransaction { get; set; }
     private DateTime? EndDateTransaction { get; set; }
 
-    // Date Range for Debts
     private DateTime? StartDateDebt { get; set; }
     private DateTime? EndDateDebt { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
-        // Load transactions and debts on initialization
         await LoadTransactionsAndDebts();
         CalculateTotals();
         ShowAllDebts();
-        ShowHighest(); 
-        StateHasChanged();
+        ShowHighestTransactions();
     }
 
     private async Task LoadTransactionsAndDebts()
     {
-        // Load transactions from the transaction.json file
         if (File.Exists(TransactionFilePath))
         {
             var json = await File.ReadAllTextAsync(TransactionFilePath);
             Transactions = JsonSerializer.Deserialize<List<Transaction>>(json) ?? new List<Transaction>();
         }
 
-        // Load debts from the debt.json file
         if (File.Exists(DebtFilePath))
         {
             var json = await File.ReadAllTextAsync(DebtFilePath);
@@ -180,40 +172,37 @@
     {
         totalIncome = Transactions.Where(t => t.Type == "Income").Sum(t => t.Amount);
         totalExpense = Transactions.Where(t => t.Type == "Expense").Sum(t => t.Amount);
-        totalDebt = Debts.Sum(d => d.Amount); // Calculating debts from the debt file
+        totalDebt = Debts.Sum(d => d.Amount);
     }
 
-    private void ShowHighest()
+    private void ShowHighestTransactions()
     {
-        FilteredTransactions = Transactions
-            .OrderByDescending(t => t.Amount)
-            .Take(5)
-            .ToList();
-        StateHasChanged();  // Refresh the UI
+        FilteredTransactions = Transactions.OrderByDescending(t => t.Amount).Take(5).ToList();
     }
 
-    private void ShowLowest()
+    private void ShowLowestTransactions()
     {
-        FilteredTransactions = Transactions
-            .OrderBy(t => t.Amount)
-            .Take(5)
-            .ToList();
-        StateHasChanged(); 
+        FilteredTransactions = Transactions.OrderBy(t => t.Amount).Take(5).ToList();
+    }
+
+    private void ShowHighestDebts()
+    {
+        FilteredDebts = Debts.OrderByDescending(d => d.Amount).Take(5).ToList();
+    }
+
+    private void ShowLowestDebts()
+    {
+        FilteredDebts = Debts.OrderBy(d => d.Amount).Take(5).ToList();
     }
 
     private void ShowOverdue()
     {
-        FilteredDebts = Debts
-            .Where(d => d.Status == "Overdue")
-            .Concat(Debts.Where(d => d.Status != "Overdue"))
-            .ToList();
-        StateHasChanged();  
+        FilteredDebts = Debts.Where(d => d.Status == "Overdue").Concat(Debts.Where(d => d.Status != "Overdue")).ToList();
     }
 
     private void ShowAllDebts()
     {
         FilteredDebts = Debts;
-        StateHasChanged(); 
     }
 
     private void FilterTransactionsByDate()
@@ -222,7 +211,6 @@
             .Where(t => (!StartDateTransaction.HasValue || t.Date >= StartDateTransaction.Value) &&
                         (!EndDateTransaction.HasValue || t.Date <= EndDateTransaction.Value))
             .ToList();
-        StateHasChanged(); 
     }
 
     private void FilterDebtsByDate()
@@ -231,54 +219,21 @@
             .Where(d => (!StartDateDebt.HasValue || d.DueDate >= StartDateDebt.Value) &&
                         (!EndDateDebt.HasValue || d.DueDate <= EndDateDebt.Value))
             .ToList();
-        StateHasChanged();  
-    }
-
-    private async Task AddTransaction(Transaction newTransaction)
-    {
-        Transactions.Add(newTransaction);
-        await SaveTransactions();
-        CalculateTotals();
-        StateHasChanged();  
-    }
-
-    private async Task AddDebt(Debt newDebt)
-    {
-        Debts.Add(newDebt);
-        await SaveDebts();
-        CalculateTotals();
-        StateHasChanged();  
-    }
-
-    private async Task SaveTransactions()
-    {
-        var json = JsonSerializer.Serialize(Transactions);
-        await File.WriteAllTextAsync(TransactionFilePath, json);
-    }
-
-
-    private async Task SaveDebts()
-    {
-        var json = JsonSerializer.Serialize(Debts);
-        await File.WriteAllTextAsync(DebtFilePath, json);
     }
 
     public class Transaction
     {
-        public string Title { get; set; }  
+        public string Title { get; set; }
         public decimal Amount { get; set; }
-        public string Type { get; set; } 
+        public string Type { get; set; }
         public DateTime Date { get; set; }
     }
 
     public class Debt
     {
-        public string Title { get; set; }  
-        public decimal Amount { get; set; }
-        public DateTime DueDate { get; set; }  
-        public string Status { get; set; }  
-        public string Notes { get; set; }
         public string Source { get; set; }
-        public string Tags { get; set; }
+        public decimal Amount { get; set; }
+        public DateTime DueDate { get; set; }
+        public string Status { get; set; }
     }
 }

@@ -37,11 +37,13 @@
 
 <!-- Display the totals (Income, Expense, Debt, Available Balance) -->
 <div class="transaction-totals">
+    <h5>Total Transactions: @TotalTransactions</h5>
     <h5>Total Income: @TotalIncome</h5>
     <h5>Total Expense: @TotalExpense</h5>
     <h5>Total Debt: @TotalDebt</h5>
     <h5>Available Balance: @AvailableBalance</h5>
 </div>
+
 
 <!-- Transactions Table -->
 <div class="transactions-table">
@@ -143,6 +145,8 @@
     public decimal TotalIncome => totalIncome;
     public decimal TotalExpense => totalExpense;
     public decimal TotalDebt => totalDebt;
+    public int TotalTransactions => transactionList.Count + debtList.Count;
+
 
     // Property for available balance
     public decimal AvailableBalance => TotalIncome + TotalDebt - TotalExpense;
