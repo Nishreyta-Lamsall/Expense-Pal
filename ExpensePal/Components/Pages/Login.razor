@@ -1,0 +1,30 @@
+﻿@page "/login"
+@using ExpensePal.Model
+
+<div class="login-page">
+    <div class="left-section">
+        <h1>Welcome<br />Back!</h1>
+    </div>
+    <div class="right-section">
+        <div class="form-container">
+            <h2>Login</h2>
+            <form @onsubmit="HandleLogin">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" @bind="Users.UserName" placeholder="Enter your username" />
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" @bind="Users.Password" placeholder="Enter your password" />
+                </div>
+                @if (!string.IsNullOrEmpty(ErrorMessage))
+                {
+                    <div class="error-message">@ErrorMessage</div>
+                }
+                <button type="submit" class="btn-primary">Login</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<link href="css/login.css" rel="stylesheet" />

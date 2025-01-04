@@ -1,0 +1,133 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 0;
+    color: #333;
+}
+
+h3.balance-text {
+    text-align: center;
+    color: #4caf50;
+    font-size: 1.5rem;
+    margin: 20px 0;
+}
+
+/* Dashboard Cards */
+.dashboard-cards {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px 0;
+}
+
+.dashboard-card {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    flex: 1;
+    margin: 0 10px;
+}
+
+    .dashboard-card h5 {
+        font-size: 1.1rem;
+        margin: 10px 0;
+    }
+
+    .dashboard-card h2 {
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 10px 0;
+    }
+
+/* Color Styles */
+.card-inflow {
+    background-color: #e8f5e9;
+    border-left: 5px solid #4caf50;
+}
+
+.card-outflow {
+    background-color: #ffebee;
+    border-left: 5px solid #f44336;
+}
+
+.card-debt {
+    background-color: #fff3e0;
+    border-left: 5px solid #ff9800;
+}
+
+/* Dashboard Section */
+.dashboard-section {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin: 20px 0;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+    .dashboard-header h5 {
+        font-size: 1.2rem;
+        margin: 0;
+    }
+
+button {
+    padding: 8px 15px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+}
+
+    button.btn-primary {
+        background-color: #4caf50;
+        color: white;
+    }
+
+    button.btn-secondary {
+        background-color: #2196f3;
+        color: white;
+    }
+
+    button:hover {
+        opacity: 0.8;
+    }
+
+/* Transaction and Debt List Styles */
+.transaction-item, .debt-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+    .transaction-item span, .debt-item span {
+        font-size: 0.9rem;
+    }
+
+/* Status Types */
+.income {
+    color: #4caf50;
+}
+
+.expense {
+    color: #f44336;
+}
+
+.debt {
+    color: #ff9800;
+}
+
+.overdue {
+    color: #f44336;
+}
+
+.paid {
+    color: #8bc34a;
+}
