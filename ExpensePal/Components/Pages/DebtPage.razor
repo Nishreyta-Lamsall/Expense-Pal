@@ -63,7 +63,11 @@
     </tbody>
 </table>
 
-<EditForm Model="newDebt">
+
+<EditForm Model="newDebt" OnValidSubmit="AddDebt">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
     <div class="modal" style="display:@(isModalOpen ? "block" : "none")">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -75,6 +79,7 @@
                     <div class="mb-3">
                         <label>Title</label>
                         <input type="text" class="form-control" @bind="newDebt.Title" placeholder="Enter title" />
+                        <ValidationMessage For="@(() => newDebt.Title)" />
                     </div>
                     <div class="mb-3">
                         <label for="status">Status</label>
@@ -84,15 +89,18 @@
                             <option value="Overdue">Overdue</option>
                             <option value="Paid">Paid</option>
                         </select>
+                        <ValidationMessage For="@(() => newDebt.Status)" />
                     </div>
 
                     <div class="mb-3">
                         <label>Amount</label>
                         <input type="number" class="form-control" @bind="newDebt.Amount" placeholder="Enter amount" />
+                        <ValidationMessage For="@(() => newDebt.Amount)" />
                     </div>
                     <div class="mb-3">
                         <label>Due Date</label>
                         <input type="date" class="form-control" @bind="newDebt.DueDate" />
+                        <ValidationMessage For="@(() => newDebt.DueDate)" />
                     </div>
                     <div class="mb-3">
                         <label>Notes</label>
@@ -101,124 +109,9 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
-                    <button type="button" class="btn btn-primary" @onclick="AddDebt">Save</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
                 </div>
             </div>
         </div>
     </div>
 </EditForm>
-
-@code {
-    private static readonly string DebtFilePath = Path.Combine(FileSystem.AppDataDirectory, "debt.json");
-
-    private List<Debt> debtList = new();
-    private List<Debt> filteredDebts = new();
-    private Debt newDebt = new();
-    private string filterTitle;
-    private string filterStatus;
-    private string sortOrder = "Ascending";
-    private bool isModalOpen = false;
-
-    private decimal totalDebt;
-
-    public decimal TotalDebt => totalDebt;
-
-    protected override void OnInitialized()
-    {
-        // Load debts from the JSON file
-        LoadDebts();
-        filteredDebts = debtList;
-        CalculateTotals();
-    }
-
-    private void LoadDebts()
-    {
-        if (File.Exists(DebtFilePath))
-        {
-            var json = File.ReadAllText(DebtFilePath);
-
-            if (string.IsNullOrWhiteSpace(json))
-            {
-                debtList = new List<Debt>(); // Initialize as empty if the file is empty
-            }
-            else
-            {
-                try
-                {
-                    debtList = JsonSerializer.Deserialize<List<Debt>>(json);
-                    if (debtList == null) debtList = new List<Debt>();
-                }
-                catch (JsonException)
-                {
-                    debtList = new List<Debt>();
-                }
-            }
-        }
-    }
-
-    private void FilterDebts()
-    {
-        filteredDebts = debtList.Where(d =>
-            (string.IsNullOrWhiteSpace(filterTitle) ||
-             (d.Title != null && d.Title.Contains(filterTitle, StringComparison.OrdinalIgnoreCase))) &&  // Null check for Title
-            (string.IsNullOrWhiteSpace(filterStatus) ||
-             (d.Status != null && d.Status.Contains(filterStatus, StringComparison.OrdinalIgnoreCase)))  // Null check for Status
-        ).ToList();
-
-        // Sort debts based on selected sort order
-        if (sortOrder == "Ascending")
-        {
-            filteredDebts = filteredDebts.OrderBy(d => d.DueDate).ToList();
-        }
-        else if (sortOrder == "Descending")
-        {
-            filteredDebts = filteredDebts.OrderByDescending(d => d.DueDate).ToList();
-        }
-
-        CalculateTotals();
-    }
-
-    private void ClearFilters()
-    {
-        filterTitle = null;
-        filterStatus = null;
-        sortOrder = "Ascending";
-        filteredDebts = debtList;
-        CalculateTotals();
-    }
-
-    private async Task AddDebt()
-    {
-        // Add the new debt to the list
-        debtList.Add(newDebt);
-        newDebt = new Debt();
-        FilterDebts();
-        SaveDebts();
-        CloseModal();
-    }
-
-    private void OpenModal() => isModalOpen = true;
-    private void CloseModal() => isModalOpen = false;
-
-    private void SaveDebts()
-    {
-        var json = JsonSerializer.Serialize(debtList);
-        File.WriteAllText(DebtFilePath, json);
-    }
-
-    private void CalculateTotals()
-    {
-        totalDebt = debtList.Sum(d => d.Amount);
-    }
-
-    public class Debt
-    {
-        public string Title { get; set; }
-        public string Status { get; set; }
-        public DateTime DueDate { get; set; } = DateTime.MinValue;
-        public decimal Amount { get; set; }
-        public string Notes { get; set; }
-        public string Source { get; set; }
-        public string Tags { get; set; }
-    }
-}

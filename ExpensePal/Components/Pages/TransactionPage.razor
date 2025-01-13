@@ -1,6 +1,7 @@
 ﻿@page "/transaction"
-@using System.Text.Json;
+@using System.Text.Json
 @inject IJSRuntime JS
+@using System.ComponentModel.DataAnnotations
 
 <div class="d-flex justify-content-between mb-3 mt-20">
     <div class="d-flex">
@@ -44,7 +45,6 @@
     <h5>Available Balance: @AvailableBalance</h5>
 </div>
 
-
 <!-- Transactions Table -->
 <div class="transactions-table">
     <table class="table table-striped">
@@ -74,7 +74,10 @@
     </table>
 </div>
 
-<EditForm Model="newTransaction">
+<EditForm Model="newTransaction" OnValidSubmit="AddTransaction">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
     <div class="modal" style="display:@(isModalOpen ? "block" : "none")">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -86,18 +89,22 @@
                     <div class="mb-3">
                         <label>Date</label>
                         <input type="date" class="form-control" @bind="newTransaction.Date" />
+                        <ValidationMessage For="@(() => newTransaction.Date)" />
                     </div>
                     <div class="mb-3">
                         <label>Title</label>
                         <input type="text" class="form-control" @bind="newTransaction.Title" placeholder="Enter title" />
+                        <ValidationMessage For="@(() => newTransaction.Title)" />
                     </div>
                     <div class="mb-3">
                         <label>Description</label>
                         <input type="text" class="form-control" @bind="newTransaction.Description" placeholder="Enter description" />
+                        <ValidationMessage For="@(() => newTransaction.Description)" />
                     </div>
                     <div class="mb-3">
                         <label>Amount</label>
                         <input type="number" class="form-control" @bind="newTransaction.Amount" placeholder="Enter amount" />
+                        <ValidationMessage For="@(() => newTransaction.Amount)" />
                     </div>
                     <div class="mb-3">
                         <label>Type</label>
@@ -106,204 +113,19 @@
                             <option value="Income">Income</option>
                             <option value="Expense">Expense</option>
                         </select>
+                        <ValidationMessage For="@(() => newTransaction.Type)" />
                     </div>
                     <div class="mb-3">
                         <label>Tags</label>
                         <input type="text" class="form-control" @bind="newTransaction.Tags" placeholder="Enter tags" />
+                        <ValidationMessage For="@(() => newTransaction.Tags)" />
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
-                    <button type="button" class="btn btn-primary" @onclick="AddTransaction">Save</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
                 </div>
             </div>
         </div>
     </div>
 </EditForm>
-
-@code {
-    private static readonly string TransactionFilePath = Path.Combine(FileSystem.AppDataDirectory, "transaction.json");
-    private static readonly string DebtFilePath = Path.Combine(FileSystem.AppDataDirectory, "debt.json");
-
-    private List<Transaction> transactionList = new();
-    private List<Transaction> filteredTransactions = new();
-    private List<Debt> debtList = new();
-    private Transaction newTransaction = new();
-    private DateTime? fromDate;
-    private DateTime? toDate;
-    private string filterTitle;
-    private string filterTags;
-    private string filterType;
-    private bool isModalOpen = false;
-
-    private decimal totalIncome;
-    private decimal totalExpense;
-    private decimal totalDebt;
-
-    private string sortOrder = "asc";  // Default sort order (ascending)
-
-    public decimal TotalIncome => totalIncome;
-    public decimal TotalExpense => totalExpense;
-    public decimal TotalDebt => totalDebt;
-    public int TotalTransactions => transactionList.Count + debtList.Count;
-
-
-    // Property for available balance
-    public decimal AvailableBalance => TotalIncome + TotalDebt - TotalExpense;
-
-    protected override void OnInitialized()
-    {
-        // Load transactions and debts from the JSON files
-        LoadTransactions();
-        LoadDebts();
-        filteredTransactions = transactionList;
-        CalculateTotals();
-    }
-
-    private void LoadTransactions()
-    {
-        if (File.Exists(TransactionFilePath))
-        {
-            var json = File.ReadAllText(TransactionFilePath);
-
-            if (string.IsNullOrWhiteSpace(json))
-            {
-                transactionList = new List<Transaction>(); // Initialize as empty if the file is empty
-            }
-            else
-            {
-                try
-                {
-                    transactionList = JsonSerializer.Deserialize<List<Transaction>>(json);
-                    if (transactionList == null) transactionList = new List<Transaction>();
-                }
-                catch (JsonException)
-                {
-                    transactionList = new List<Transaction>();
-                }
-            }
-        }
-        else
-        {
-            // Load default data
-            transactionList = new List<Transaction>
-            {
-                new Transaction { Date = DateTime.Now.AddDays(-2), Title = "Salary", Description = "Monthly salary", Amount = 3000, Type = "Income", Tags = "work, salary" },
-                new Transaction { Date = DateTime.Now.AddDays(-1), Title = "Grocery", Description = "Weekly groceries", Amount = 150, Type = "Expense", Tags = "food, grocery" },
-                new Transaction { Date = DateTime.Now, Title = "Electric Bill", Description = "Monthly bill", Amount = 75, Type = "Expense", Tags = "utilities, electric" }
-            };
-        }
-    }
-
-    private void LoadDebts()
-    {
-        if (File.Exists(DebtFilePath))
-        {
-            var json = File.ReadAllText(DebtFilePath);
-
-            if (string.IsNullOrWhiteSpace(json))
-            {
-                debtList = new List<Debt>(); // Initialize as empty if the file is empty
-            }
-            else
-            {
-                try
-                {
-                    debtList = JsonSerializer.Deserialize<List<Debt>>(json);
-                    if (debtList == null) debtList = new List<Debt>();
-                }
-                catch (JsonException)
-                {
-                    debtList = new List<Debt>();
-                }
-            }
-        }
-    }
-
-    private void FilterTransactions()
-    {
-        filteredTransactions = transactionList.Where(t =>
-            // Filter by Title (check for null before calling Contains)
-            (string.IsNullOrWhiteSpace(filterTitle) || (!string.IsNullOrEmpty(t.Title) && t.Title.Contains(filterTitle, StringComparison.OrdinalIgnoreCase))) &&
-
-            // Filter by Tags (check for null before calling Split)
-            (string.IsNullOrWhiteSpace(filterTags) ||
-                (t.Tags != null && t.Tags.Split(',').Any(tag => filterTags.Split(',').Any(ft => ft.Trim().Equals(tag.Trim(), StringComparison.OrdinalIgnoreCase))))) &&
-
-            // Filter by Type
-            (string.IsNullOrEmpty(filterType) || t.Type == filterType)
-        ).ToList();
-
-        // Sort transactions by date
-        if (sortOrder == "asc")
-        {
-            filteredTransactions = filteredTransactions.OrderBy(t => t.Date).ToList();
-        }
-        else if (sortOrder == "desc")
-        {
-            filteredTransactions = filteredTransactions.OrderByDescending(t => t.Date).ToList();
-        }
-
-        CalculateTotals();
-    }
-
-    private void ClearFilters()
-    {
-        filterTitle = null;
-        filterTags = null;
-        filterType = null; // Clear the filter for type
-        sortOrder = "asc"; // Reset to ascending by default
-        filteredTransactions = transactionList;
-        CalculateTotals();
-    }
-
-    private async Task AddTransaction()
-    {
-        // Check if the transaction type is "Expense" and the amount exceeds the available balance
-        if (newTransaction.Type == "Expense" && newTransaction.Amount > AvailableBalance)
-        {
-            // Display an alert message when balance is insufficient
-            await JS.InvokeVoidAsync("alert", "Insufficient balance");
-            return; // Exit the method
-        }
-
-        // If balance is sufficient, proceed with adding the transaction
-        transactionList.Add(newTransaction);
-        newTransaction = new Transaction();
-        FilterTransactions();
-        SaveTransactions();
-        CloseModal();
-    }
-
-    private void OpenModal() => isModalOpen = true;
-    private void CloseModal() => isModalOpen = false;
-
-    private void SaveTransactions()
-    {
-        var json = JsonSerializer.Serialize(transactionList);
-        File.WriteAllText(TransactionFilePath, json);
-    }
-
-    private void CalculateTotals()
-    {
-        totalIncome = transactionList.Where(t => t.Type == "Income").Sum(t => t.Amount);
-        totalExpense = transactionList.Where(t => t.Type == "Expense").Sum(t => t.Amount);
-        totalDebt = debtList.Sum(d => d.Amount);
-    }
-
-    public class Transaction
-    {
-        public string Title { get; set; }
-        public string Description { get; set; }
-        public DateTime Date { get; set; }
-        public decimal Amount { get; set; }
-        public string Type { get; set; }
-        public string Tags { get; set; }
-    }
-
-    public class Debt
-    {
-        public string Title { get; set; }
-        public decimal Amount { get; set; }
-    }
-}
