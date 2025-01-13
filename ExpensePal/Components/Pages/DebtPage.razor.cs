@@ -58,12 +58,28 @@ namespace ExpensePal.Components.Pages
             CloseModal();
         }
 
+        private void MarkAsPaid(Debt debt)
+        {
+            // Update the debt status
+            debt.Status = "Paid";
+
+            // Recalculate total debt
+            CalculateTotals();
+
+            // Save the updated list of debts
+            _debtService.SaveDebts(debtList);
+        }
+
+
         private void OpenModal() => isModalOpen = true;
         private void CloseModal() => isModalOpen = false;
 
         private void CalculateTotals()
         {
-            totalDebt = _debtService.CalculateTotalDebt(debtList);
+            // Only sum debts that have status "Overdue" or "Pending"
+            totalDebt = _debtService.CalculateTotalDebt(debtList.Where(d => d.Status != "Paid").ToList());
         }
+
+
     }
 }

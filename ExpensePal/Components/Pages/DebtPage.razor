@@ -13,7 +13,6 @@
             <select id="filterStatus" class="form-control" @bind="filterStatus">
                 <option value="">Select an option</option>
                 <option value="Pending">Pending</option>
-                <option value="Overdue">Overdue</option>
                 <option value="Paid">Paid</option>
             </select>
         </div>
@@ -49,18 +48,24 @@
         </tr>
     </thead>
     <tbody>
-        @foreach (var debt in filteredDebts)
-        {
-            <tr>
-                <td>@debt.DueDate.ToShortDateString()</td>
-                <td>@debt.Title</td>
-                <td>@debt.Status</td>
-                <td>@debt.Amount</td>
-                <td>@debt.DueDate.ToShortDateString()</td>
-                <td>@debt.Notes</td>
-            </tr>
-        }
-    </tbody>
+    @foreach (var debt in filteredDebts)
+    {
+        <tr>
+            <td>@debt.DueDate.ToShortDateString()</td>
+            <td>@debt.Title</td>
+            <td>@debt.Status</td>
+            <td>@debt.Amount</td>
+            <td>@debt.DueDate.ToShortDateString()</td>
+            <td>@debt.Notes</td>
+            <td>
+                @if (debt.Status != "Paid")
+                {
+                    <button class="btn btn-success" @onclick="() => MarkAsPaid(debt)">Mark as Paid</button>
+                }
+            </td>
+        </tr>
+    }
+</tbody>
 </table>
 
 
@@ -86,7 +91,6 @@
                         <select id="status" class="form-control" @bind="newDebt.Status">
                             <option value="">Select an option</option>
                             <option value="Pending">Pending</option>
-                            <option value="Overdue">Overdue</option>
                             <option value="Paid">Paid</option>
                         </select>
                         <ValidationMessage For="@(() => newDebt.Status)" />

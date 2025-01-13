@@ -57,7 +57,7 @@ namespace ExpensePal.Components.Pages
         {
             totalIncome = Transactions.Where(t => t.Type == "Income").Sum(t => t.Amount);
             totalExpense = Transactions.Where(t => t.Type == "Expense").Sum(t => t.Amount);
-            totalDebt = Debts.Sum(d => d.Amount);
+            totalDebt = Debts.Where(d => d.Status == "Pending").Sum(d => d.Amount);
         }
 
         private void ShowHighestTransactions()
@@ -82,7 +82,7 @@ namespace ExpensePal.Components.Pages
 
         private void ShowOverdue()
         {
-            FilteredDebts = Debts.Where(d => d.Status == "Overdue").Concat(Debts.Where(d => d.Status != "Overdue")).ToList();
+            FilteredDebts = Debts.Where(d => d.Status == "Pending").ToList();
         }
 
         private void ShowAllDebts()

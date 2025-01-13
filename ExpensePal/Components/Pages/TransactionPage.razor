@@ -117,7 +117,18 @@
                     </div>
                     <div class="mb-3">
                         <label>Tags</label>
-                        <input type="text" class="form-control" @bind="newTransaction.Tags" placeholder="Enter tags" />
+                        <div class="d-flex">
+                            <input type="text" class="form-control" @bind="customTag" placeholder="Add custom tag" />
+                            <button class="btn btn-primary ms-2" @onclick="AddCustomTag">Add Tag</button>
+                        </div>
+                        <div class="mt-2">
+                            <ul>
+                                @foreach (var tag in availableTags)
+                                {
+                                    <li>@tag</li>
+                                }
+                            </ul>
+                        </div>
                         <ValidationMessage For="@(() => newTransaction.Tags)" />
                     </div>
                 </div>

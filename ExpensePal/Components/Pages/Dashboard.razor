@@ -80,7 +80,7 @@
                 <div class="d-flex flex-wrap gap-2 mt-2">
                     <button class="btn btn-primary flex-grow-1" @onclick="ShowHighestDebts">Top 5 Highest</button>
                     <button class="btn btn-secondary flex-grow-1" @onclick="ShowLowestDebts">Top 5 Lowest</button>
-                    <button class="btn btn-secondary flex-grow-1" @onclick="ShowOverdue">Overdue Debts</button>
+                    <button class="btn btn-secondary flex-grow-1" @onclick="ShowOverdue">Pending Debts</button>
                     <button class="btn btn-secondary flex-grow-1" @onclick="ShowAllDebts">All Debts</button>
                 </div>
                 <div class="mt-3">
@@ -108,7 +108,7 @@
                                 <td>@debt.Source</td>
                                 <td>@debt.DueDate.ToString("yyyy-MM-dd")</td>
                                 <td>@debt.Amount.ToString("C")</td>
-                                <td class="@(debt.Status == "Overdue" ? "overdue" : "paid")">
+                                <td class="@(debt.Status == "Pending" ? "pending" : "paid")">
                                     @debt.Status
                                 </td>
                             </tr>

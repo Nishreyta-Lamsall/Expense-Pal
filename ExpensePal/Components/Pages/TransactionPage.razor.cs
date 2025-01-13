@@ -14,10 +14,15 @@ namespace ExpensePal.Components.Pages
         private DateTime? fromDate;
         private DateTime? toDate;
         private string filterTitle;
-        private string filterTags;
         private string filterType;
         private bool isModalOpen = false;
         private string sortOrder = "asc";  // Default sort order
+
+        // Custom Tag and Predefined Tags Handling
+        private List<string> availableTags = new List<string> { "Work", "Food", "Entertainment", "Health" };
+        private string customTag { get; set; } = ""; // For custom tag input
+        private string filterTags { get; set; } = ""; // For filtering by tags
+        private List<string> addedTags = new List<string>(); // List of added tags
 
         public decimal TotalIncome { get; private set; }
         public decimal TotalExpense { get; private set; }
@@ -65,6 +70,12 @@ namespace ExpensePal.Components.Pages
                 return;
             }
 
+            // Add custom tags to the transaction if any
+            if (!string.IsNullOrEmpty(filterTags))
+            {
+                newTransaction.Tags = filterTags;
+            }
+
             transactionList.Add(newTransaction);
             _transactionService.SaveTransactions(transactionList);
             newTransaction = new Transaction();
@@ -79,7 +90,19 @@ namespace ExpensePal.Components.Pages
         {
             TotalIncome = _transactionService.CalculateTotal(transactionList, "Income");
             TotalExpense = _transactionService.CalculateTotal(transactionList, "Expense");
-            TotalDebt = _transactionService.CalculateTotalDebt(debtList);
+
+            // Only sum debts that have status "Overdue" or "Pending"
+            TotalDebt = _transactionService.CalculateTotalDebt(debtList.Where(d => d.Status == "Pending").ToList());
+        }
+
+        // Method to add a custom tag
+        private void AddCustomTag()
+        {
+            if (!string.IsNullOrWhiteSpace(customTag) && !availableTags.Contains(customTag))
+            {
+                availableTags.Add(customTag);  // Add custom tag to the list
+                customTag = ""; // Clear the input after adding the tag
+            }
         }
     }
 }
