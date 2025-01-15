@@ -22,20 +22,32 @@ namespace ExpensePal.Components.Pages
         private bool isModalOpen = false;
 
         private decimal totalDebt;
-
         public decimal TotalDebt => totalDebt;
-
         protected override void OnInitialized()
         {
-            debtList = _debtService.LoadDebts();
-            filteredDebts = debtList;
-            CalculateTotals();
+            try
+            {
+                debtList = _debtService.LoadDebts();
+                filteredDebts = debtList;
+                CalculateTotals();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error initializing DebtPage: {ex.Message}");
+            }
         }
 
         private void FilterDebts()
         {
-            filteredDebts = _debtService.FilterDebts(debtList, filterTitle, filterStatus, sortOrder);
-            CalculateTotals();
+            try
+            {
+                filteredDebts = _debtService.FilterDebts(debtList, filterTitle, filterStatus, sortOrder);
+                CalculateTotals();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error filtering debts: {ex.Message}");
+            }
         }
 
         private void ClearFilters()
@@ -49,45 +61,69 @@ namespace ExpensePal.Components.Pages
 
         private async Task AddDebt()
         {
-            debtList.Add(newDebt);
-            newDebt = new Debt();
-            FilterDebts();
-            _debtService.SaveDebts(debtList);
-            CloseModal();
+            try
+            {
+                debtList.Add(newDebt);
+                newDebt = new Debt();
+                FilterDebts();
+                _debtService.SaveDebts(debtList);
+                CloseModal();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error adding new debt: {ex.Message}");
+            }
         }
 
         private async Task MarkDebtAsPaid(Debt debt)
         {
-            // Ensure totals are up-to-date
-            CalculateTotals();
-
-            decimal availableBalance = CalculateAvailableBalance();
-            if (availableBalance - debt.Amount < 0)
+            try
             {
-                await JS.InvokeVoidAsync("showAlert", "Insufficient balance to clear this debt.");
-                return;
+                CalculateTotals();
+                decimal availableBalance = CalculateAvailableBalance();
+
+                if (availableBalance - debt.Amount < 0)
+                {
+                    await JS.InvokeVoidAsync("showAlert", "Insufficient balance to clear this debt.");
+                    return;
+                }
+
+                debt.Status = "Paid";
+                _debtService.SaveDebts(debtList);
+                _debtService.DeductDebtFromIncome(debt.Amount);
+                CalculateTotals();
             }
-
-            // Mark the debt as paid and update the list
-            debt.Status = "Paid";
-            _debtService.SaveDebts(debtList);
-
-            // Update total income by deducting the cleared debt and save updated income in the transaction file
-            _debtService.DeductDebtFromIncome(debt.Amount);
-
-            CalculateTotals();
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error marking debt as paid: {ex.Message}");
+            }
         }
 
         private void CalculateTotals()
         {
-            totalDebt = _debtService.CalculateTotalDebt(debtList.Where(d => d.Status != "Paid").ToList());
+            try
+            {
+                totalDebt = _debtService.CalculateTotalDebt(debtList.Where(d => d.Status != "Paid").ToList());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error calculating totals: {ex.Message}");
+            }
         }
 
         private decimal CalculateAvailableBalance()
         {
-            decimal totalIncome = _debtService.CalculateTotalIncome();
-            decimal totalExpenses = _debtService.CalculateTotalOutflows();
-            return totalIncome + totalDebt - totalExpenses;
+            try
+            {
+                decimal totalIncome = _debtService.CalculateTotalIncome();
+                decimal totalExpenses = _debtService.CalculateTotalOutflows();
+                return totalIncome + totalDebt - totalExpenses;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error calculating available balance: {ex.Message}");
+                return 0;
+            }
         }
 
         private void OpenModal() => isModalOpen = true;

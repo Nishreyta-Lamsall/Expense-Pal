@@ -14,16 +14,49 @@ namespace ExpensePal.Components.Pages
 
         public async Task LoadTransactionsAndDebts()
         {
-            if (File.Exists(TransactionFilePath))
+            try
             {
-                var json = await File.ReadAllTextAsync(TransactionFilePath);
-                Transactions = JsonSerializer.Deserialize<List<Transaction>>(json) ?? new List<Transaction>();
-            }
+                if (File.Exists(TransactionFilePath))
+                {
+                    try
+                    {
+                        var json = await File.ReadAllTextAsync(TransactionFilePath);
+                        Transactions = JsonSerializer.Deserialize<List<Transaction>>(json) ?? new List<Transaction>();
+                    }
+                    catch (JsonException jsonEx)
+                    {
+                        Console.WriteLine($"Error deserializing transactions: {jsonEx.Message}");
+                        Transactions = new List<Transaction>();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error reading transactions file: {ex.Message}");
+                        Transactions = new List<Transaction>();
+                    }
+                }
 
-            if (File.Exists(DebtFilePath))
+                if (File.Exists(DebtFilePath))
+                {
+                    try
+                    {
+                        var json = await File.ReadAllTextAsync(DebtFilePath);
+                        Debts = JsonSerializer.Deserialize<List<Debt>>(json) ?? new List<Debt>();
+                    }
+                    catch (JsonException jsonEx)
+                    {
+                        Console.WriteLine($"Error deserializing debts: {jsonEx.Message}");
+                        Debts = new List<Debt>();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error reading debts file: {ex.Message}");
+                        Debts = new List<Debt>();
+                    }
+                }
+            }
+            catch (Exception ex)
             {
-                var json = await File.ReadAllTextAsync(DebtFilePath);
-                Debts = JsonSerializer.Deserialize<List<Debt>>(json) ?? new List<Debt>();
+                Console.WriteLine($"Unexpected error loading transactions and debts: {ex.Message}");
             }
         }
     }

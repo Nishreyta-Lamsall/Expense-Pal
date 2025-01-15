@@ -44,28 +44,51 @@ namespace ExpensePal.Components.Pages
 
         private async Task LoadTransactionsAndDebts()
         {
-            if (File.Exists(TransactionFilePath))
+            try
             {
-                var json = await File.ReadAllTextAsync(TransactionFilePath);
-                Transactions = JsonSerializer.Deserialize<List<Transaction>>(json) ?? new List<Transaction>();
-            }
+                if (File.Exists(TransactionFilePath))
+                {
+                    var json = await File.ReadAllTextAsync(TransactionFilePath);
+                    Transactions = JsonSerializer.Deserialize<List<Transaction>>(json) ?? new List<Transaction>();
+                }
 
-            if (File.Exists(DebtFilePath))
-            {
-                var json = await File.ReadAllTextAsync(DebtFilePath);
-                Debts = JsonSerializer.Deserialize<List<Debt>>(json) ?? new List<Debt>();
+                if (File.Exists(DebtFilePath))
+                {
+                    var json = await File.ReadAllTextAsync(DebtFilePath);
+                    Debts = JsonSerializer.Deserialize<List<Debt>>(json) ?? new List<Debt>();
+                }
             }
-            StateHasChanged();
+            catch (Exception ex)
+            {
+                // Log the error (use a logging mechanism, or output to console for debugging)
+                Console.WriteLine($"Error loading data: {ex.Message}");
+            }
+            finally
+            {
+                StateHasChanged();
+            }
         }
 
         private void CalculateTotals()
         {
-            totalIncome = Transactions.Where(t => t.Type == "Income").Sum(t => t.Amount);
-            totalExpense = Transactions.Where(t => t.Type == "Expense").Sum(t => t.Amount);
-            totalDebt = Debts.Where(d => d.Status == "Pending").Sum(d => d.Amount);
-            paidDebt = Debts.Where(d => d.Status == "Paid").Sum(d => d.Amount);
-            StateHasChanged();
+            try
+            {
+                totalIncome = Transactions.Where(t => t.Type == "Income").Sum(t => t.Amount);
+                totalExpense = Transactions.Where(t => t.Type == "Expense").Sum(t => t.Amount);
+                totalDebt = Debts.Where(d => d.Status == "Pending").Sum(d => d.Amount);
+                paidDebt = Debts.Where(d => d.Status == "Paid").Sum(d => d.Amount);
+            }
+            catch (Exception ex)
+            {
+                // Log the error
+                Console.WriteLine($"Error calculating totals: {ex.Message}");
+            }
+            finally
+            {
+                StateHasChanged();
+            }
         }
+
 
         private void ShowHighestTransactions()
         {

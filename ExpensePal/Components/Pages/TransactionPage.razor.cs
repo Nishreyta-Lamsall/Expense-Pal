@@ -25,7 +25,6 @@ namespace ExpensePal.Components.Pages
         private string filterTags { get; set; } = ""; // For filtering by tags
         private List<string> addedTags = new List<string>(); // List of added tags
         private List<string> selectedTags = new();
-
         public decimal TotalIncome { get; private set; }
         public decimal TotalExpense { get; private set; }
         public decimal TotalDebt { get; private set; }
@@ -42,16 +41,30 @@ namespace ExpensePal.Components.Pages
 
         protected override void OnInitialized()
         {
-            transactionList = _transactionService.LoadTransactions();
-            debtList = _transactionService.LoadDebts();
-            filteredTransactions = transactionList;
-            CalculateTotals();
+            try
+            {
+                transactionList = _transactionService.LoadTransactions();
+                debtList = _transactionService.LoadDebts();
+                filteredTransactions = transactionList;
+                CalculateTotals();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error initializing TransactionPage: {ex.Message}");
+            }
         }
 
         private void FilterTransactions()
         {
-            filteredTransactions = _transactionService.FilterTransactions(transactionList, filterTitle, filterTags, filterType, sortOrder);
-            CalculateTotals();
+            try
+            {
+                filteredTransactions = _transactionService.FilterTransactions(transactionList, filterTitle, filterTags, filterType, sortOrder);
+                CalculateTotals();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error filtering transactions: {ex.Message}");
+            }
         }
 
         private void ClearFilters()
@@ -71,50 +84,67 @@ namespace ExpensePal.Components.Pages
             }
         }
 
-
         private async Task AddTransaction()
         {
-            if (newTransaction.Type == "Expense" && newTransaction.Amount > AvailableBalance)
+            try
             {
-                await JS.InvokeVoidAsync("alert", "Insufficient balance");
-                return;
-            }
+                if (newTransaction.Type == "Expense" && newTransaction.Amount > AvailableBalance)
+                {
+                    await JS.InvokeVoidAsync("alert", "Insufficient balance");
+                    return;
+                }
 
-            // Add selected tags to the transaction
-            if (selectedTags.Any())
+                if (selectedTags.Any())
+                {
+                    newTransaction.Tags = string.Join(",", selectedTags);
+                }
+
+                transactionList.Add(newTransaction);
+                _transactionService.SaveTransactions(transactionList);
+                newTransaction = new Transaction();
+                FilterTransactions();
+                CloseModal();
+            }
+            catch (Exception ex)
             {
-                newTransaction.Tags = string.Join(",", selectedTags);
+                Console.WriteLine($"Error adding transaction: {ex.Message}");
             }
-
-            transactionList.Add(newTransaction);
-            _transactionService.SaveTransactions(transactionList);
-            newTransaction = new Transaction();
-            FilterTransactions();
-            CloseModal();
         }
-
-
 
         private void OpenModal() => isModalOpen = true;
         private void CloseModal() => isModalOpen = false;
 
         private void CalculateTotals()
         {
-            TotalIncome = _transactionService.CalculateTotal(transactionList, "Income");
-            TotalExpense = _transactionService.CalculateTotal(transactionList, "Expense");
+            try
+            {
+                TotalIncome = _transactionService.CalculateTotal(transactionList, "Income");
+                TotalExpense = _transactionService.CalculateTotal(transactionList, "Expense");
 
-            // Only sum debts that have status "Overdue" or "Pending"
-            TotalDebt = _transactionService.CalculateTotalDebt(debtList.Where(d => d.Status == "Pending").ToList());
+                TotalDebt = _transactionService.CalculateTotalDebt(debtList.Where(d => d.Status == "Pending").ToList());
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error calculating totals: {ex.Message}");
+            }
         }
 
         // Method to add a custom tag
         private void AddCustomTag()
         {
-            if (!string.IsNullOrWhiteSpace(customTag) && !availableTags.Contains(customTag))
+            try
             {
-                availableTags.Add(customTag);  // Add custom tag to the list
-                customTag = ""; // Clear the input after adding the tag
+                if (!string.IsNullOrWhiteSpace(customTag) && !availableTags.Contains(customTag))
+                {
+                    availableTags.Add(customTag);
+                    customTag = "";
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error adding custom tag: {ex.Message}");
             }
         }
+
     }
 }

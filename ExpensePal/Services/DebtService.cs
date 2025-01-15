@@ -13,14 +13,34 @@ namespace ExpensePal.Services
 
         public List<Debt> LoadDebts()
         {
-            if (File.Exists(DebtFilePath))
+            try
             {
-                var json = File.ReadAllText(DebtFilePath);
-                return JsonSerializer.Deserialize<List<Debt>>(json) ?? new List<Debt>();
+                if (File.Exists(DebtFilePath))
+                {
+                    var json = File.ReadAllText(DebtFilePath);
+                    return JsonSerializer.Deserialize<List<Debt>>(json) ?? new List<Debt>();
+                }
+            }
+            catch (IOException ioEx)
+            {
+                // Handle file read error
+                Console.WriteLine($"Error reading debt file: {ioEx.Message}");
+            }
+            catch (JsonException jsonEx)
+            {
+                // Handle JSON deserialization error
+                Console.WriteLine($"Error deserializing debt file: {jsonEx.Message}");
+            }
+            catch (Exception ex)
+            {
+                // Handle other types of exceptions
+                Console.WriteLine($"An unexpected error occurred while loading debts: {ex.Message}");
             }
 
+            // Return an empty list in case of any error
             return new List<Debt>();
         }
+
 
         public void SaveDebts(List<Debt> debts)
         {

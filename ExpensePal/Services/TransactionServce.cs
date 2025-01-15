@@ -10,9 +10,28 @@ namespace ExpensePal.Services
 
         public TransactionService(string transactionFilePath, string debtFilePath)
         {
-            _transactionFilePath = transactionFilePath;
-            _debtFilePath = debtFilePath;
+            try
+            {
+                if (string.IsNullOrEmpty(transactionFilePath) || string.IsNullOrEmpty(debtFilePath))
+                {
+                    throw new ArgumentException("File paths cannot be null or empty.");
+                }
+
+                _transactionFilePath = transactionFilePath;
+                _debtFilePath = debtFilePath;
+            }
+            catch (ArgumentException argEx)
+            {
+                // Handle argument exception if file paths are invalid
+                Console.WriteLine($"Argument error: {argEx.Message}");
+            }
+            catch (Exception ex)
+            {
+                // Handle any other general exceptions
+                Console.WriteLine($"An unexpected error occurred during initialization: {ex.Message}");
+            }
         }
+
 
         public List<Transaction> LoadTransactions()
         {
