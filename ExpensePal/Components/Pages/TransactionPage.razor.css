@@ -100,9 +100,12 @@ body {
 }
 
 .transaction-totals {
-    margin-top: 1rem;
-    font-weight: bold;
+    margin-top: 1rem; 
+    font-weight: normal; 
+    font-size: 8px;
+    color: #555; 
 }
+
 
     .transaction-totals h5 {
         margin-bottom: 0.5rem;

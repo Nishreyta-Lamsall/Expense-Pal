@@ -57,6 +57,12 @@ body {
     width: 200px;
 }
 
+.debt-total {
+    font-weight: normal;
+    font-size: 8px;
+    color: #555;
+}
+
 /* Button Section */
 .filter-container .btn {
     margin-left: 10px;
@@ -114,16 +120,6 @@ body {
     justify-content: space-between;
     margin-top: 20px;
 }
-
-/* Transaction Totals */
-.transaction-totals {
-    margin-top: 1rem;
-    font-weight: bold;
-}
-
-    .transaction-totals h5 {
-        margin-bottom: 0.5rem;
-    }
 
 /* Responsive Design */
 @media (max-width: 768px) {
