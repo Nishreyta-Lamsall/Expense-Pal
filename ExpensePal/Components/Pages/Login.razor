@@ -1,5 +1,9 @@
 ﻿@page "/login"
 @using ExpensePal.Model
+@using ExpensePal.Services
+@inject NavigationManager Nav
+@using ExpensePal.Base
+
 
 <div class="login-page">
     <div class="left-section">
@@ -17,14 +21,27 @@
                     <label for="password">Password</label>
                     <input type="password" id="password" @bind="Users.Password" placeholder="Enter your password" />
                 </div>
+
+                <div class="form-group">
+                    <label for="currency" class="mb-2 block">Currency</label>
+                    <select id="currency" @bind="Users.Currency" class="pr-6 py-2 border rounded-md w-full">
+                        <option value="0">Select Currency</option>
+                        @foreach (var currency in Enum.GetValues(typeof(Currency)).Cast<Currency>())
+                        {
+                            <option value="@currency">@currency</option>
+                        }
+                    </select>
+                </div>
+
+
                 @if (!string.IsNullOrEmpty(ErrorMessage))
                 {
                     <div class="error-message">@ErrorMessage</div>
                 }
+
                 <button type="submit" class="btn-primary">Login</button>
             </form>
         </div>
     </div>
 </div>
 
-<link href="css/login.css" rel="stylesheet" />

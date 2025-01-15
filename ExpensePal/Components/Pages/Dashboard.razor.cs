@@ -1,4 +1,5 @@
 ﻿using ExpensePal.Model;
+using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Text.Json;
 
@@ -14,10 +15,13 @@ namespace ExpensePal.Components.Pages
         private decimal totalIncome;
         private decimal totalExpense;
         private decimal totalDebt;
+        private decimal paidDebt;
 
         public decimal TotalIncome => totalIncome;
         public decimal TotalExpense => totalExpense;
         public decimal TotalDebt => totalDebt;
+
+        public decimal PaidDebt => paidDebt;
 
         public decimal AvailableBalance => TotalIncome + TotalDebt - TotalExpense;
 
@@ -51,6 +55,7 @@ namespace ExpensePal.Components.Pages
                 var json = await File.ReadAllTextAsync(DebtFilePath);
                 Debts = JsonSerializer.Deserialize<List<Debt>>(json) ?? new List<Debt>();
             }
+            StateHasChanged();
         }
 
         private void CalculateTotals()
@@ -58,6 +63,8 @@ namespace ExpensePal.Components.Pages
             totalIncome = Transactions.Where(t => t.Type == "Income").Sum(t => t.Amount);
             totalExpense = Transactions.Where(t => t.Type == "Expense").Sum(t => t.Amount);
             totalDebt = Debts.Where(d => d.Status == "Pending").Sum(d => d.Amount);
+            paidDebt = Debts.Where(d => d.Status == "Paid").Sum(d => d.Amount);
+            StateHasChanged();
         }
 
         private void ShowHighestTransactions()
@@ -107,4 +114,4 @@ namespace ExpensePal.Components.Pages
         }
 
     }
-}
+} 

@@ -78,18 +78,17 @@ namespace ExpensePal.Services
             return 0;
         }
 
-        // Deduct debt from total income
+       
         public void DeductDebtFromIncome(decimal debtAmount)
         {
-            // Load existing transactions
+ 
             var transactions = LoadTransactions();
 
-            // Find the income transaction (assuming the first income transaction represents the total income)
             var incomeTransaction = transactions.FirstOrDefault(t => t.Type == "Income");
 
             if (incomeTransaction != null)
             {
-                // Deduct the debt amount from the income
+    
                 incomeTransaction.Amount -= debtAmount;
 
                 // Save the updated transactions list back to the file

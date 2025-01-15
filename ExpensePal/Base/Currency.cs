@@ -2,8 +2,8 @@
 {
     public enum Currency
     {
-        NPR = 1,
+        USD = 1,
         INR = 2,
-        USD = 3,
+        NPR = 3,
     }
 }

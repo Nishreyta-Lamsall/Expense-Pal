@@ -20,10 +20,27 @@
     </div>
     <div class="col-md-4">
         <div class="dashboard-card card-debt text-center">
-            <h5>Total Debt</h5>
+            <h5>Remaining Debt</h5>
             <h2>@TotalDebt</h2>
         </div>
     </div>
+    <div class="col-md-4" style="margin-top: 20px;">
+        <div class="dashboard-card card-debt text-center">
+            <h5>Cleared Debt</h5>
+            <h2>@PaidDebt</h2>
+        </div>
+    </div>
+    <div class="col-md-4" style="margin-top: 20px;">
+        <div class="dashboard-card card-debt text-center">
+            <h5>Debt</h5>
+            <h2>@(TotalDebt + PaidDebt)</h2>
+        </div>
+    </div>
+
+</div>
+
+<div>
+    <canvas id="pieChart" class="pie-chart"></canvas>
 </div>
 
 <div class="row mt-4">
@@ -119,3 +136,45 @@
         </div>
     </div>
 </div>
+
+@code {
+    private decimal previousIncome;
+    private decimal previousExpense;
+    private decimal previousDebt;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender || HasValuesChanged())
+        {
+            // Update previous values
+            previousIncome = TotalIncome;
+            previousExpense = TotalExpense;
+            previousDebt = TotalDebt;
+
+            // Call JavaScript to render the chart with updated values
+            await JSRuntime.InvokeVoidAsync("renderPieChart", TotalIncome, TotalExpense, TotalDebt);
+        }
+    }
+
+    private bool HasValuesChanged()
+    {
+        bool changed = previousIncome != TotalIncome || previousExpense != TotalExpense || previousDebt != TotalDebt;
+        if (changed)
+        {
+            Console.WriteLine($"Values changed: Income = {TotalIncome}, Expense = {TotalExpense}, Debt = {TotalDebt}");
+        }
+        return changed;
+    }
+
+    private async Task UpdateChart()
+    {
+        await JSRuntime.InvokeVoidAsync("renderPieChart", TotalIncome, TotalExpense, TotalDebt);
+        StateHasChanged(); // Ensure re-render happens
+    }
+
+    protected override void OnParametersSet()
+    {
+        // Trigger re-render on parameter updates
+        StateHasChanged();
+    }
+}

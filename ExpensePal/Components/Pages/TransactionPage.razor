@@ -18,14 +18,13 @@
         </div>
         <div class="me-3">
             <label for="filterTags">Tags:</label>
-            <select id="filterTags" class="form-select" @bind="filterTags">
-                <option value="">Select a tag</option>
-                @foreach (var tag in availableTags)
-                {
-                    <option value="@tag">@tag</option>
-                }
-            </select>
+            <input id="filterTags"
+                   class="form-control"
+                   type="text"
+                   @bind="filterTags"
+                   placeholder="Type a tag" />
         </div>
+
         <div class="me-3">
             <label for="filterType">Type:</label>
             <select id="filterType" class="form-select" @bind="filterType">
@@ -36,19 +35,20 @@
         </div>
     </div>
     <div class="align-self-end">
-        <button class="btn btn-secondary" @onclick="FilterTransactions">Filter</button>
-        <button class="btn btn-outline-secondary" @onclick="ClearFilters">Clear</button>
-        <button class="btn btn-primary ms-3" @onclick="OpenModal">Add Transaction</button>
+        <button class="btn btn-secondary mt-3" @onclick="FilterTransactions">Filter</button>
+        <button class="btn btn-outline-secondary mt-3" @onclick="ClearFilters">Clear</button>
+        <button class="btn btn-primary ms-3 mt-3" @onclick="OpenModal">Add Transaction</button>
     </div>
+
 </div>
 
 <!-- Display the totals (Income, Expense, Debt, Available Balance) -->
 <div class="transaction-totals">
     <h5>Total Transactions: @TotalTransactions</h5>
-    <h5>Total Income: @TotalIncome</h5>
-    <h5>Total Expense: @TotalExpense</h5>
-    <h5>Total Debt: @TotalDebt</h5>
-    <h5>Available Balance: @AvailableBalance</h5>
+    <h5>Total Income: @TotalIncome.ToString("C")</h5>
+    <h5>Total Expense: @TotalExpense.ToString("C")</h5>
+    <h5>Total Debt: @TotalDebt.ToString("C")</h5>
+    <h5>Available Balance: @AvailableBalance.ToString("C")</h5>
 </div>
 
 <!-- Transactions Table -->
@@ -71,7 +71,7 @@
                     <td>@transaction.Date.ToShortDateString()</td>
                     <td>@transaction.Title</td>
                     <td>@transaction.Description</td>
-                    <td>@transaction.Amount</td>
+                    <td>@transaction.Amount.ToString("C")</td>
                     <td>@transaction.Type</td>
                     <td>@transaction.Tags</td>
                 </tr>
@@ -134,7 +134,7 @@
 
                         <!-- Dropdown for inbuilt tags -->
                         <div class="mt-3">
-                            <label for="filterTags">Select Predefined Tags:</label>
+                            <label for="filterTags">Select Tags:</label>
                             <select id="filterTags" class="form-select" multiple @onchange="HandleTagSelection">
                                 @foreach (var tag in availableTags)
                                 {
@@ -143,7 +143,7 @@
                             </select>
                         </div>
                     </div>
-                        </div>
+                </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save</button>

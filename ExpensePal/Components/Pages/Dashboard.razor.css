@@ -82,6 +82,13 @@ h3.balance-text {
         margin: 0;
     }
 
+    .pie-chart {
+        width: 400px; /* Adjust the width */
+        height: 400px; /* Adjust the height */
+        max-width: 80%; 
+    }
+
+
 /* Buttons */
 button {
     padding: 8px 15px;
@@ -126,6 +133,7 @@ button {
         margin-top: 5px; /* Vertical spacing consistency */
     }
 
+
 /* Status Types */
 .income {
     color: #4caf50;
@@ -143,9 +151,14 @@ button {
     color: #f44336;
 }
 
-.paid {
-    color: #8bc34a;
+.pending {
+    color: red;
 }
+
+.paid {
+    color: green;
+}
+
 
 /* Media Queries */
 @media (max-width: 768px) {
