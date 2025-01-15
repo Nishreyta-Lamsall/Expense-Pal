@@ -17,6 +17,8 @@ namespace ExpensePal
                 });
 
             builder.Services.AddMauiBlazorWebView();
+            builder.Services.AddScoped<DebtService>();
+
 
 
 

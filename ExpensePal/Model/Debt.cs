@@ -19,8 +19,7 @@ namespace ExpensePal.Model
 
         public string Notes { get; set; }
 
+        [Required(ErrorMessage = "Source is required")]
         public string Source { get; set; }
-
-        public string Tags { get; set; }
     }
 }

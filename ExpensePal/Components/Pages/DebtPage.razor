@@ -1,6 +1,6 @@
 ﻿@page "/debt"
 @using System.Text.Json;
-@inject IJSRuntime JS
+@inject IJSRuntime JS;
 
 <div class="d-flex justify-content-between mb-3 mt-20">
     <div class="d-flex">
@@ -34,9 +34,6 @@
 
 <div class="mt-3">
     <h5>Total Debt: @TotalDebt</h5>
-    <h5>Total Income: @CalculateTotalIncome()</h5>
-
-
 </div>
 
 <table class="table">
@@ -63,7 +60,7 @@
             <td>
                 @if (debt.Status != "Paid")
                 {
-                    <button class="btn btn-success" @onclick="() => MarkAsPaid(debt)">Mark as Paid</button>
+                    <button class="btn btn-success" @onclick="() => MarkDebtAsPaid(debt)">Mark as Paid</button>
                 }
             </td>
         </tr>
@@ -112,6 +109,13 @@
                     <div class="mb-3">
                         <label>Notes</label>
                         <input type="text" class="form-control" @bind="newDebt.Notes" placeholder="Enter notes" />
+                    </div>
+
+                    <!-- New Source Field as Text Input -->
+                    <div class="mb-3">
+                        <label for="source">Source</label>
+                        <input type="text" class="form-control" @bind="newDebt.Source" placeholder="Enter source" />
+                        <ValidationMessage For="@(() => newDebt.Source)" />
                     </div>
                 </div>
                 <div class="modal-footer">

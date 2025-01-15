@@ -17,7 +17,9 @@ h3.balance-text {
 /* Dashboard Cards */
 .dashboard-cards {
     display: flex;
+    flex-wrap: wrap; /* Allow wrapping */
     justify-content: space-between;
+    gap: 20px; /* Adds spacing between cards */
     margin: 20px 0;
 }
 
@@ -27,8 +29,8 @@ h3.balance-text {
     padding: 20px;
     text-align: center;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    flex: 1;
-    margin: 0 10px;
+    flex: 1 1 calc(33.333% - 20px); /* 3 cards per row, with space for gaps */
+    min-width: 250px; /* Ensures cards are not too narrow */
 }
 
     .dashboard-card h5 {
@@ -69,8 +71,10 @@ h3.balance-text {
 
 .dashboard-header {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start; /* Align items to the left */
     align-items: center;
+    flex-wrap: wrap;
+    gap: 10px; /* Adds spacing between elements */
 }
 
     .dashboard-header h5 {
@@ -78,11 +82,14 @@ h3.balance-text {
         margin: 0;
     }
 
+/* Buttons */
 button {
     padding: 8px 15px;
     border-radius: 5px;
     border: none;
     cursor: pointer;
+    margin-right: 10px; /* Consistent horizontal spacing */
+    margin-bottom: 10px; /* Ensures vertical spacing */
 }
 
     button.btn-primary {
@@ -95,6 +102,12 @@ button {
         color: white;
     }
 
+    button.btn-info {
+        background-color: #17a2b8;
+        color: white;
+        margin-left: 10px; /* Ensures consistent spacing */
+    }
+
     button:hover {
         opacity: 0.8;
     }
@@ -105,10 +118,12 @@ button {
     justify-content: space-between;
     padding: 10px 0;
     border-bottom: 1px solid #eee;
+    gap: 10px; /* Adds spacing between buttons */
 }
 
-    .transaction-item span, .debt-item span {
-        font-size: 0.9rem;
+    .transaction-item button, .debt-item button {
+        margin-right: 10px; /* Explicit spacing for buttons */
+        margin-top: 5px; /* Vertical spacing consistency */
     }
 
 /* Status Types */
@@ -130,4 +145,44 @@ button {
 
 .paid {
     color: #8bc34a;
+}
+
+/* Media Queries */
+@media (max-width: 768px) {
+    .dashboard-cards {
+        gap: 10px;
+    }
+
+    .dashboard-card {
+        flex: 1 1 calc(50% - 10px); /* 2 cards per row on medium screens */
+    }
+
+    .dashboard-header {
+        flex-direction: column; /* Stack items vertically */
+        align-items: flex-start;
+    }
+
+    button.btn-info {
+        margin-top: 10px; /* Add top margin on small and medium screens */
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-card {
+        flex: 1 1 100%; /* Full width on small screens */
+        margin: 10px 0;
+    }
+
+    h3.balance-text {
+        font-size: 1.2rem;
+    }
+
+    .dashboard-header h5 {
+        font-size: 1rem;
+    }
+
+    button {
+        width: 100%; /* Full-width buttons on small screens */
+        margin-bottom: 10px; /* Add vertical spacing between buttons */
+    }
 }
