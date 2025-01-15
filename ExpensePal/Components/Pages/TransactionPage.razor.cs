@@ -1,5 +1,6 @@
 ﻿using ExpensePal.Model;
 using ExpensePal.Services;
+using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
 namespace ExpensePal.Components.Pages
@@ -23,6 +24,7 @@ namespace ExpensePal.Components.Pages
         private string customTag { get; set; } = ""; // For custom tag input
         private string filterTags { get; set; } = ""; // For filtering by tags
         private List<string> addedTags = new List<string>(); // List of added tags
+        private List<string> selectedTags = new();
 
         public decimal TotalIncome { get; private set; }
         public decimal TotalExpense { get; private set; }
@@ -61,6 +63,14 @@ namespace ExpensePal.Components.Pages
             filteredTransactions = transactionList;
             CalculateTotals();
         }
+        private void HandleTagSelection(ChangeEventArgs e)
+        {
+            if (e.Value is IEnumerable<object> selectedOptions)
+            {
+                selectedTags = selectedOptions.Cast<string>().ToList();
+            }
+        }
+
 
         private async Task AddTransaction()
         {
@@ -70,10 +80,10 @@ namespace ExpensePal.Components.Pages
                 return;
             }
 
-            // Add custom tags to the transaction if any
-            if (!string.IsNullOrEmpty(filterTags))
+            // Add selected tags to the transaction
+            if (selectedTags.Any())
             {
-                newTransaction.Tags = filterTags;
+                newTransaction.Tags = string.Join(",", selectedTags);
             }
 
             transactionList.Add(newTransaction);
@@ -82,6 +92,8 @@ namespace ExpensePal.Components.Pages
             FilterTransactions();
             CloseModal();
         }
+
+
 
         private void OpenModal() => isModalOpen = true;
         private void CloseModal() => isModalOpen = false;

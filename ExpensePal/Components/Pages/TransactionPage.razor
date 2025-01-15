@@ -18,7 +18,13 @@
         </div>
         <div class="me-3">
             <label for="filterTags">Tags:</label>
-            <input type="text" id="filterTags" class="form-control" @bind="filterTags" placeholder="Search by tags" />
+            <select id="filterTags" class="form-select" @bind="filterTags">
+                <option value="">Select a tag</option>
+                @foreach (var tag in availableTags)
+                {
+                    <option value="@tag">@tag</option>
+                }
+            </select>
         </div>
         <div class="me-3">
             <label for="filterType">Type:</label>
@@ -118,20 +124,26 @@
                     <div class="mb-3">
                         <label>Tags</label>
                         <div class="d-flex">
+                            <!-- Input field for custom tags -->
                             <input type="text" class="form-control" @bind="customTag" placeholder="Add custom tag" />
-                            <button class="btn btn-primary ms-2" @onclick="AddCustomTag">Add Tag</button>
+
+                            <!-- Button with explicit type -->
+                            <button type="button" class="btn btn-primary ms-2" @onclick="AddCustomTag">Add Tag</button>
+
                         </div>
-                        <div class="mt-2">
-                            <ul>
+
+                        <!-- Dropdown for inbuilt tags -->
+                        <div class="mt-3">
+                            <label for="filterTags">Select Predefined Tags:</label>
+                            <select id="filterTags" class="form-select" multiple @onchange="HandleTagSelection">
                                 @foreach (var tag in availableTags)
                                 {
-                                    <li>@tag</li>
+                                    <option value="@tag" selected="@selectedTags.Contains(tag)">@tag</option>
                                 }
-                            </ul>
+                            </select>
                         </div>
-                        <ValidationMessage For="@(() => newTransaction.Tags)" />
                     </div>
-                </div>
+                        </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Save</button>
