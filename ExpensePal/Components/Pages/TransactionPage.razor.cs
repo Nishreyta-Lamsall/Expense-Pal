@@ -20,7 +20,7 @@ namespace ExpensePal.Components.Pages
         private string sortOrder = "asc";  // Default sort order
 
         // Custom Tag and Predefined Tags Handling
-        private List<string> availableTags = new List<string> { "Work", "Food", "Entertainment", "Health" };
+        private List<string> availableTags = new List<string> { "Work", "Food", "Entertainment", "Health", "Yearly", "Monthly", "Drinks", "Clothes", "Gadgets", "Miscellaneous", "Fuel", "Rent", "EMI", "Party" };
         private string customTag { get; set; } = ""; // For custom tag input
         private string filterTags { get; set; } = ""; // For filtering by tags
         private List<string> addedTags = new List<string>(); // List of added tags
@@ -59,6 +59,17 @@ namespace ExpensePal.Components.Pages
             try
             {
                 filteredTransactions = _transactionService.FilterTransactions(transactionList, filterTitle, filterTags, filterType, sortOrder);
+
+                // Apply date range filter if dates are selected
+                if (fromDate.HasValue)
+                {
+                    filteredTransactions = filteredTransactions.Where(t => t.Date >= fromDate.Value).ToList();
+                }
+                if (toDate.HasValue)
+                {
+                    filteredTransactions = filteredTransactions.Where(t => t.Date <= toDate.Value).ToList();
+                }
+
                 CalculateTotals();
             }
             catch (Exception ex)
@@ -72,10 +83,13 @@ namespace ExpensePal.Components.Pages
             filterTitle = null;
             filterTags = null;
             filterType = null;
+            fromDate = null;
+            toDate = null;
             sortOrder = "asc";
             filteredTransactions = transactionList;
             CalculateTotals();
         }
+
         private void HandleTagSelection(ChangeEventArgs e)
         {
             if (e.Value is IEnumerable<object> selectedOptions)
@@ -145,6 +159,5 @@ namespace ExpensePal.Components.Pages
                 Console.WriteLine($"Error adding custom tag: {ex.Message}");
             }
         }
-
     }
 }

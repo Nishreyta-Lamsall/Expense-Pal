@@ -33,6 +33,17 @@
                 <option value="Expense">Expense</option>
             </select>
         </div>
+
+        <!-- Date Range Filters -->
+        <div class="me-3">
+            <label for="fromDate">From Date:</label>
+            <input type="date" id="fromDate" class="form-control" @bind="fromDate" />
+        </div>
+        <div class="me-3">
+            <label for="toDate">To Date:</label>
+            <input type="date" id="toDate" class="form-control" @bind="toDate" />
+        </div>
+
     </div>
     <div class="align-self-end">
         <button class="btn btn-secondary mt-3" @onclick="FilterTransactions">Filter</button>

@@ -82,12 +82,11 @@ h3.balance-text {
         margin: 0;
     }
 
-    .pie-chart {
-        width: 400px; /* Adjust the width */
-        height: 400px; /* Adjust the height */
-        max-width: 80%; 
-    }
-
+.pie-chart {
+    width: 400px; /* Adjust the width */
+    height: 400px; /* Adjust the height */
+    max-width: 80%;
+}
 
 /* Buttons */
 button {
@@ -100,17 +99,17 @@ button {
 }
 
     button.btn-primary {
-        background-color: #4caf50;
+        background-color: #0a192f; /* Replaced green (#4caf50) with #0a192f */
         color: white;
     }
 
     button.btn-secondary {
-        background-color: #2196f3;
+        background-color: #0a192f; /* Replaced light blue with #0a192f */
         color: white;
     }
 
     button.btn-info {
-        background-color: #17a2b8;
+        background-color: #0a192f; /* Replaced light blue with #0a192f */
         color: white;
         margin-left: 10px; /* Ensures consistent spacing */
     }
@@ -132,7 +131,6 @@ button {
         margin-right: 10px; /* Explicit spacing for buttons */
         margin-top: 5px; /* Vertical spacing consistency */
     }
-
 
 /* Status Types */
 .income {
@@ -158,7 +156,6 @@ button {
 .paid {
     color: green;
 }
-
 
 /* Media Queries */
 @media (max-width: 768px) {
