@@ -10,7 +10,7 @@ namespace ExpensePal.Components.Pages
 {
     public partial class DebtPage
     {
-        // Inject DebtService
+        // Dependency injection 
         [Inject] private DebtService _debtService { get; set; }
 
         private List<Debt> debtList = new();
@@ -20,16 +20,18 @@ namespace ExpensePal.Components.Pages
         private string filterStatus;
         private string sortOrder = "Ascending";
         private bool isModalOpen = false;
-
         private decimal totalDebt;
+
         public decimal TotalDebt => totalDebt;
+
+        //Component is initialized which loads debts and updates totals.
         protected override void OnInitialized()
         {
             try
             {
                 debtList = _debtService.LoadDebts();
                 filteredDebts = debtList;
-                CalculateTotals();
+                UpdateTotals();
             }
             catch (Exception ex)
             {
@@ -42,7 +44,7 @@ namespace ExpensePal.Components.Pages
             try
             {
                 filteredDebts = _debtService.FilterDebts(debtList, filterTitle, filterStatus, sortOrder);
-                CalculateTotals();
+                UpdateTotals();
             }
             catch (Exception ex)
             {
@@ -56,7 +58,7 @@ namespace ExpensePal.Components.Pages
             filterStatus = null;
             sortOrder = "Ascending";
             filteredDebts = debtList;
-            CalculateTotals();
+            UpdateTotals();
         }
 
         private async Task AddDebt()
@@ -64,9 +66,9 @@ namespace ExpensePal.Components.Pages
             try
             {
                 debtList.Add(newDebt);
+                _debtService.SaveDebts(debtList);
                 newDebt = new Debt();
                 FilterDebts();
-                _debtService.SaveDebts(debtList);
                 CloseModal();
             }
             catch (Exception ex)
@@ -75,11 +77,11 @@ namespace ExpensePal.Components.Pages
             }
         }
 
+        // Marks a debt as paid, if the user has enough available balance.
         private async Task MarkDebtAsPaid(Debt debt)
         {
             try
             {
-                CalculateTotals();
                 decimal availableBalance = CalculateAvailableBalance();
 
                 if (availableBalance - debt.Amount < 0)
@@ -91,7 +93,7 @@ namespace ExpensePal.Components.Pages
                 debt.Status = "Paid";
                 _debtService.SaveDebts(debtList);
                 _debtService.DeductDebtFromIncome(debt.Amount);
-                CalculateTotals();
+                UpdateTotals();
             }
             catch (Exception ex)
             {
@@ -99,34 +101,20 @@ namespace ExpensePal.Components.Pages
             }
         }
 
-        private void CalculateTotals()
+        private void UpdateTotals()
         {
-            try
-            {
-                totalDebt = _debtService.CalculateTotalDebt(debtList.Where(d => d.Status != "Paid").ToList());
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error calculating totals: {ex.Message}");
-            }
+            totalDebt = _debtService.CalculateTotalDebt(debtList.Where(d => d.Status != "Paid").ToList());
         }
 
         private decimal CalculateAvailableBalance()
         {
-            try
-            {
-                decimal totalIncome = _debtService.CalculateTotalIncome();
-                decimal totalExpenses = _debtService.CalculateTotalOutflows();
-                return totalIncome + totalDebt - totalExpenses;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error calculating available balance: {ex.Message}");
-                return 0;
-            }
+            return _debtService.CalculateAvailableBalance(totalDebt);
         }
 
+        // Opens the modal for adding a new debt.
         private void OpenModal() => isModalOpen = true;
+
+        // Closes the modal.
         private void CloseModal() => isModalOpen = false;
     }
 }

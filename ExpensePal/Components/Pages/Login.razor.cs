@@ -1,6 +1,6 @@
 ﻿using ExpensePal.Services;
 using ExpensePal.Model;
-using ExpensePal.Base; // Add this namespace to access the Currency enum
+using ExpensePal.Base; // namespace to access the Currency enum
 
 namespace ExpensePal.Components.Pages
 {

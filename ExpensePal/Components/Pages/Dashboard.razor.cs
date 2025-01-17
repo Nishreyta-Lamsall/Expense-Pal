@@ -1,140 +1,87 @@
 ﻿using ExpensePal.Model;
+using ExpensePal.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
-using System.Text.Json;
 
 namespace ExpensePal.Components.Pages
 {
     public partial class Dashboard
     {
-        private List<Transaction> Transactions = new List<Transaction>();
-        private List<Debt> Debts = new List<Debt>();
+        //Dependency Injection
+        [Inject] private DashboardService DashboardService { get; set; }
+
+        // Lists to store filtered transactions and debts for display.
         private List<Transaction> FilteredTransactions = new List<Transaction>();
         private List<Debt> FilteredDebts = new List<Debt>();
 
+        // Variables to store key financial metrics like total income, expenses, debts, and paid debts.
         private decimal totalIncome;
         private decimal totalExpense;
         private decimal totalDebt;
         private decimal paidDebt;
 
+        // Properties to expose the calculated financial metrics for binding in the UI.
         public decimal TotalIncome => totalIncome;
         public decimal TotalExpense => totalExpense;
         public decimal TotalDebt => totalDebt;
-
         public decimal PaidDebt => paidDebt;
-
         public decimal AvailableBalance => TotalIncome + TotalDebt - TotalExpense;
 
-        private static readonly string TransactionFilePath = Path.Combine(FileSystem.AppDataDirectory, "transaction.json");
-        private static readonly string DebtFilePath = Path.Combine(FileSystem.AppDataDirectory, "debt.json");
-
+        // Nullable DateTime properties for filtering transactions and debts by date range.
         private DateTime? StartDateTransaction { get; set; }
         private DateTime? EndDateTransaction { get; set; }
-
         private DateTime? StartDateDebt { get; set; }
         private DateTime? EndDateDebt { get; set; }
 
+        // Lifecycle method to initialize the component and load financial data.
         protected override async Task OnInitializedAsync()
         {
-            await LoadTransactionsAndDebts();
-            CalculateTotals();
-            ShowAllDebts();
-            ShowHighestTransactions();
-        }
-
-        private async Task LoadTransactionsAndDebts()
-        {
-            try
-            {
-                if (File.Exists(TransactionFilePath))
-                {
-                    var json = await File.ReadAllTextAsync(TransactionFilePath);
-                    Transactions = JsonSerializer.Deserialize<List<Transaction>>(json) ?? new List<Transaction>();
-                }
-
-                if (File.Exists(DebtFilePath))
-                {
-                    var json = await File.ReadAllTextAsync(DebtFilePath);
-                    Debts = JsonSerializer.Deserialize<List<Debt>>(json) ?? new List<Debt>();
-                }
-            }
-            catch (Exception ex)
-            {
-                // Log the error (use a logging mechanism, or output to console for debugging)
-                Console.WriteLine($"Error loading data: {ex.Message}");
-            }
-            finally
-            {
-                StateHasChanged();
-            }
-        }
-
-        private void CalculateTotals()
-        {
-            try
-            {
-                totalIncome = Transactions.Where(t => t.Type == "Income").Sum(t => t.Amount);
-                totalExpense = Transactions.Where(t => t.Type == "Expense").Sum(t => t.Amount);
-                totalDebt = Debts.Where(d => d.Status == "Pending").Sum(d => d.Amount);
-                paidDebt = Debts.Where(d => d.Status == "Paid").Sum(d => d.Amount);
-            }
-            catch (Exception ex)
-            {
-                // Log the error
-                Console.WriteLine($"Error calculating totals: {ex.Message}");
-            }
-            finally
-            {
-                StateHasChanged();
-            }
-        }
-
-
-        private void ShowHighestTransactions()
-        {
-            FilteredTransactions = Transactions.OrderByDescending(t => t.Amount).Take(5).ToList();
-        }
-
-        private void ShowLowestTransactions()
-        {
-            FilteredTransactions = Transactions.OrderBy(t => t.Amount).Take(5).ToList();
-        }
-
-        private void ShowHighestDebts()
-        {
-            FilteredDebts = Debts.OrderByDescending(d => d.Amount).Take(5).ToList();
-        }
-
-        private void ShowLowestDebts()
-        {
-            FilteredDebts = Debts.OrderBy(d => d.Amount).Take(5).ToList();
-        }
-
-        private void ShowOverdue()
-        {
-            FilteredDebts = Debts.Where(d => d.Status == "Pending").ToList();
-        }
-
-        private void ShowAllDebts()
-        {
-            FilteredDebts = Debts;
+            await DashboardService.LoadTransactionsAndDebts();
+            totalIncome = DashboardService.CalculateTotal("Income");
+            totalExpense = DashboardService.CalculateTotal("Expense");
+            totalDebt = DashboardService.CalculateTotalDebt("Pending");
+            paidDebt = DashboardService.CalculateTotalDebt("Paid");
+            FilteredTransactions = DashboardService.Transactions;
+            FilteredDebts = DashboardService.Debts;
         }
 
         private void FilterTransactionsByDate()
         {
-            FilteredTransactions = Transactions
-                .Where(t => (!StartDateTransaction.HasValue || t.Date >= StartDateTransaction.Value) &&
-                            (!EndDateTransaction.HasValue || t.Date <= EndDateTransaction.Value))
-                .ToList();
+            FilteredTransactions = DashboardService.FilterTransactionsByDate(StartDateTransaction, EndDateTransaction);
         }
 
         private void FilterDebtsByDate()
         {
-            FilteredDebts = Debts
-                .Where(d => (!StartDateDebt.HasValue || d.DueDate >= StartDateDebt.Value) &&
-                            (!EndDateDebt.HasValue || d.DueDate <= EndDateDebt.Value))
-                .ToList();
+            FilteredDebts = DashboardService.FilterDebtsByDate(StartDateDebt, EndDateDebt);
         }
 
+        private void ShowHighestTransactions()
+        {
+            FilteredTransactions = DashboardService.GetTopTransactions(5, ascending: false);
+        }
+
+        private void ShowLowestTransactions()
+        {
+            FilteredTransactions = DashboardService.GetTopTransactions(5, ascending: true);
+        }
+
+        private void ShowHighestDebts()
+        {
+            FilteredDebts = DashboardService.GetTopDebts(5, ascending: false);
+        }
+
+        private void ShowLowestDebts()
+        {
+            FilteredDebts = DashboardService.GetTopDebts(5, ascending: true);
+        }
+
+        private void ShowAllDebts()
+        {
+            FilteredDebts = DashboardService.Debts;
+        }
+
+        private void ShowOverdue()
+        {
+            FilteredDebts = DashboardService.Debts.Where(d => d.Status == "Pending").ToList();
+        }
     }
-} 
+}

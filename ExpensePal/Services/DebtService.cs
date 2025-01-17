@@ -8,9 +8,11 @@ namespace ExpensePal.Services
 {
     public class DebtService
     {
+        // File paths for storing debts and transactions
         private static readonly string DebtFilePath = Path.Combine(FileSystem.AppDataDirectory, "debt.json");
         private static readonly string TransactionFilePath = Path.Combine(FileSystem.AppDataDirectory, "transaction.json");
 
+        // Load debts from the JSON file
         public List<Debt> LoadDebts()
         {
             try
@@ -18,121 +20,129 @@ namespace ExpensePal.Services
                 if (File.Exists(DebtFilePath))
                 {
                     var json = File.ReadAllText(DebtFilePath);
-                    return JsonSerializer.Deserialize<List<Debt>>(json) ?? new List<Debt>();
+                    return JsonSerializer.Deserialize<List<Debt>>(json) ?? new List<Debt>(); // Deserialize debts or return an empty list
                 }
-            }
-            catch (IOException ioEx)
-            {
-                // Handle file read error
-                Console.WriteLine($"Error reading debt file: {ioEx.Message}");
-            }
-            catch (JsonException jsonEx)
-            {
-                // Handle JSON deserialization error
-                Console.WriteLine($"Error deserializing debt file: {jsonEx.Message}");
             }
             catch (Exception ex)
             {
-                // Handle other types of exceptions
-                Console.WriteLine($"An unexpected error occurred while loading debts: {ex.Message}");
+                Console.WriteLine($"Error loading debts: {ex.Message}"); 
             }
 
-            // Return an empty list in case of any error
-            return new List<Debt>();
+            return new List<Debt>(); 
         }
 
-
+        // Save debts to the JSON file
         public void SaveDebts(List<Debt> debts)
         {
-            var json = JsonSerializer.Serialize(debts);
-            File.WriteAllText(DebtFilePath, json);
+            try
+            {
+                var json = JsonSerializer.Serialize(debts); 
+                File.WriteAllText(DebtFilePath, json);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving debts: {ex.Message}"); 
+            }
         }
 
+        // Filter debts based on title, status, and sort order
         public List<Debt> FilterDebts(List<Debt> debts, string filterTitle, string filterStatus, string sortOrder)
         {
             var filtered = debts.Where(d =>
-                (string.IsNullOrWhiteSpace(filterTitle) || (d.Title != null && d.Title.Contains(filterTitle, StringComparison.OrdinalIgnoreCase))) &&
-                (string.IsNullOrWhiteSpace(filterStatus) || (d.Status != null && d.Status.Contains(filterStatus, StringComparison.OrdinalIgnoreCase)))
+                (string.IsNullOrWhiteSpace(filterTitle) || d.Title?.Contains(filterTitle, StringComparison.OrdinalIgnoreCase) == true) &&
+                (string.IsNullOrWhiteSpace(filterStatus) || d.Status?.Contains(filterStatus, StringComparison.OrdinalIgnoreCase) == true)
             ).ToList();
 
-            if (sortOrder == "Ascending")
+            // Sort debts based on the specified order
+            return sortOrder switch
             {
-                return filtered.OrderBy(d => d.DueDate).ToList();
-            }
-            else if (sortOrder == "Descending")
-            {
-                return filtered.OrderByDescending(d => d.DueDate).ToList();
-            }
-
-            return filtered;
+                "Ascending" => filtered.OrderBy(d => d.DueDate).ToList(),
+                "Descending" => filtered.OrderByDescending(d => d.DueDate).ToList(),
+                _ => filtered // Return unsorted list if no valid sort order is provided
+            };
         }
 
+        // Calculate the total amount of all debts
         public decimal CalculateTotalDebt(List<Debt> debts)
         {
-            return debts.Sum(d => d.Amount);
+            return debts.Sum(d => d.Amount); 
+        }
+
+        // Calculate the available balance after deducting total debt and expenses
+        public decimal CalculateAvailableBalance(decimal totalDebt)
+        {
+            decimal totalIncome = CalculateTotalIncome(); 
+            decimal totalExpenses = CalculateTotalOutflows(); 
+            return totalIncome - totalExpenses - totalDebt; 
         }
 
         public decimal CalculateTotalIncome()
         {
-            if (File.Exists(TransactionFilePath))
-            {
-                var json = File.ReadAllText(TransactionFilePath);
-                var transactions = JsonSerializer.Deserialize<List<Transaction>>(json) ?? new List<Transaction>();
-
-                return transactions.Where(t => t.Type == "Income").Sum(t => t.Amount);
-            }
-
-            return 0;
+            return GetTransactions("Income").Sum(t => t.Amount); 
         }
 
         public decimal CalculateTotalOutflows()
         {
-            if (File.Exists(TransactionFilePath))
-            {
-                var json = File.ReadAllText(TransactionFilePath);
-                var transactions = JsonSerializer.Deserialize<List<Transaction>>(json) ?? new List<Transaction>();
-
-                return transactions.Where(t => t.Type == "Expense").Sum(t => t.Amount);
-            }
-
-            return 0;
+            return GetTransactions("Expense").Sum(t => t.Amount); 
         }
 
-       
+        // Deduct a specified debt amount from the first income transaction
         public void DeductDebtFromIncome(decimal debtAmount)
         {
- 
-            var transactions = LoadTransactions();
-
-            var incomeTransaction = transactions.FirstOrDefault(t => t.Type == "Income");
-
-            if (incomeTransaction != null)
+            try
             {
-    
-                incomeTransaction.Amount -= debtAmount;
+                var transactions = LoadTransactions(); // Load all transactions
+                var incomeTransaction = transactions.FirstOrDefault(t => t.Type == "Income"); // Find the first income transaction
 
-                // Save the updated transactions list back to the file
-                SaveTransactions(transactions);
+                if (incomeTransaction != null)
+                {
+                    incomeTransaction.Amount -= debtAmount; 
+                    SaveTransactions(transactions); // Save the updated transactions
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deducting debt from income: {ex.Message}"); 
             }
         }
 
-        // Load transactions from the file
+        // Load transactions from the JSON file
         private List<Transaction> LoadTransactions()
         {
-            if (File.Exists(TransactionFilePath))
+            try
             {
-                var json = File.ReadAllText(TransactionFilePath);
-                return JsonSerializer.Deserialize<List<Transaction>>(json) ?? new List<Transaction>();
+                if (File.Exists(TransactionFilePath))
+                {
+                    var json = File.ReadAllText(TransactionFilePath);
+                    return JsonSerializer.Deserialize<List<Transaction>>(json) ?? new List<Transaction>(); 
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading transactions: {ex.Message}"); 
             }
 
-            return new List<Transaction>();
+            return new List<Transaction>(); 
         }
 
-        // Save transactions to the file
+        // Save transactions to the JSON file
         private void SaveTransactions(List<Transaction> transactions)
         {
-            var json = JsonSerializer.Serialize(transactions);
-            File.WriteAllText(TransactionFilePath, json);
+            try
+            {
+                var json = JsonSerializer.Serialize(transactions); 
+                File.WriteAllText(TransactionFilePath, json); 
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving transactions: {ex.Message}"); 
+            }
+        }
+
+        // Retrieve transactions of a specific type (e.g., Income or Expense)
+        private List<Transaction> GetTransactions(string type)
+        {
+            return LoadTransactions().Where(t => t.Type == type).ToList(); 
         }
     }
 }

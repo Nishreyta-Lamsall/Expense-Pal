@@ -16,9 +16,10 @@ namespace ExpensePal
                     fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
                 });
 
-            builder.Services.AddMauiBlazorWebView();
-            builder.Services.AddScoped<DebtService>();
-
+                builder.Services.AddMauiBlazorWebView();
+                builder.Services.AddScoped<DebtService>();
+                builder.Services.AddScoped<TransactionService>();
+                builder.Services.AddScoped<DashboardService>();
 
 
 

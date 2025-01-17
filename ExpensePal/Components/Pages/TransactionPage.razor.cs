@@ -2,51 +2,58 @@
 using ExpensePal.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ExpensePal.Components.Pages
 {
     public partial class TransactionPage
     {
-        private readonly TransactionService _transactionService;
-        private List<Transaction> transactionList;
-        private List<Transaction> filteredTransactions;
-        private List<Debt> debtList;
+        // Dependency injection 
+        [Inject] private TransactionService _transactionService { get; set; }
+
+        // Local variables to hold the list of transactions and debts
+        private List<Transaction> transactionList = new();
+        private List<Transaction> filteredTransactions = new();
+        private List<Debt> debtList = new();
         private Transaction newTransaction = new();
+
+        // Filter and sorting parameters for transactions
+        private string filterTitle;
+        private string filterTags;
+        private string filterType;
+        private string sortOrder = "Ascending";
         private DateTime? fromDate;
         private DateTime? toDate;
-        private string filterTitle;
-        private string filterType;
         private bool isModalOpen = false;
-        private string sortOrder = "asc";  // Default sort order
 
-        // Custom Tag and Predefined Tags Handling
-        private List<string> availableTags = new List<string> { "Work", "Food", "Entertainment", "Health", "Yearly", "Monthly", "Drinks", "Clothes", "Gadgets", "Miscellaneous", "Fuel", "Rent", "EMI", "Party" };
-        private string customTag { get; set; } = ""; // For custom tag input
-        private string filterTags { get; set; } = ""; // For filtering by tags
-        private List<string> addedTags = new List<string>(); // List of added tags
+        // Custom tag and tag selection for transactions
+        private string customTag = "";
         private List<string> selectedTags = new();
+        private List<string> availableTags = new()
+        {
+            "Work", "Food", "Entertainment", "Health", "Yearly", "Monthly",
+            "Drinks", "Clothes", "Gadgets", "Miscellaneous", "Fuel", "Rent", "EMI", "Party"
+        };
+
         public decimal TotalIncome { get; private set; }
         public decimal TotalExpense { get; private set; }
         public decimal TotalDebt { get; private set; }
         public decimal AvailableBalance => TotalIncome + TotalDebt - TotalExpense;
 
-        public int TotalTransactions => filteredTransactions?.Count ?? 0;
+        public int TotalTransactions => filteredTransactions.Count;
 
-        public TransactionPage()
-        {
-            _transactionService = new TransactionService(
-                Path.Combine(FileSystem.AppDataDirectory, "transaction.json"),
-                Path.Combine(FileSystem.AppDataDirectory, "debt.json"));
-        }
-
-        protected override void OnInitialized()
+        // Lifecycle method that initializes the page, loading data
+        protected override async Task OnInitializedAsync()
         {
             try
             {
-                transactionList = _transactionService.LoadTransactions();
-                debtList = _transactionService.LoadDebts();
+                transactionList = await _transactionService.LoadTransactionsAsync();
+                debtList = await _transactionService.LoadDebtsAsync();
                 filteredTransactions = transactionList;
-                CalculateTotals();
+                UpdateTotals();
             }
             catch (Exception ex)
             {
@@ -58,19 +65,10 @@ namespace ExpensePal.Components.Pages
         {
             try
             {
-                filteredTransactions = _transactionService.FilterTransactions(transactionList, filterTitle, filterTags, filterType, sortOrder);
-
-                // Apply date range filter if dates are selected
-                if (fromDate.HasValue)
-                {
-                    filteredTransactions = filteredTransactions.Where(t => t.Date >= fromDate.Value).ToList();
-                }
-                if (toDate.HasValue)
-                {
-                    filteredTransactions = filteredTransactions.Where(t => t.Date <= toDate.Value).ToList();
-                }
-
-                CalculateTotals();
+                filteredTransactions = _transactionService.FilterTransactions(
+                    transactionList, filterTitle, filterTags, filterType, fromDate, toDate, sortOrder
+                );
+                UpdateTotals();
             }
             catch (Exception ex)
             {
@@ -87,24 +85,17 @@ namespace ExpensePal.Components.Pages
             toDate = null;
             sortOrder = "asc";
             filteredTransactions = transactionList;
-            CalculateTotals();
+            UpdateTotals();
         }
 
-        private void HandleTagSelection(ChangeEventArgs e)
-        {
-            if (e.Value is IEnumerable<object> selectedOptions)
-            {
-                selectedTags = selectedOptions.Cast<string>().ToList();
-            }
-        }
-
+        // Method to add a new transaction after validation
         private async Task AddTransaction()
         {
             try
             {
                 if (newTransaction.Type == "Expense" && newTransaction.Amount > AvailableBalance)
                 {
-                    await JS.InvokeVoidAsync("alert", "Insufficient balance");
+                    await JS.InvokeVoidAsync("alert", "Insufficient balance.");
                     return;
                 }
 
@@ -113,8 +104,7 @@ namespace ExpensePal.Components.Pages
                     newTransaction.Tags = string.Join(",", selectedTags);
                 }
 
-                transactionList.Add(newTransaction);
-                _transactionService.SaveTransactions(transactionList);
+                transactionList = await _transactionService.AddTransactionAsync(newTransaction, transactionList);
                 newTransaction = new Transaction();
                 FilterTransactions();
                 CloseModal();
@@ -125,39 +115,34 @@ namespace ExpensePal.Components.Pages
             }
         }
 
-        private void OpenModal() => isModalOpen = true;
-        private void CloseModal() => isModalOpen = false;
-
-        private void CalculateTotals()
+        private void UpdateTotals()
         {
-            try
-            {
-                TotalIncome = _transactionService.CalculateTotal(transactionList, "Income");
-                TotalExpense = _transactionService.CalculateTotal(transactionList, "Expense");
-
-                TotalDebt = _transactionService.CalculateTotalDebt(debtList.Where(d => d.Status == "Pending").ToList());
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error calculating totals: {ex.Message}");
-            }
+            TotalIncome = _transactionService.CalculateTotal(transactionList, "Income");
+            TotalExpense = _transactionService.CalculateTotal(transactionList, "Expense");
+            TotalDebt = _transactionService.CalculateTotalDebt(debtList.Where(d => d.Status == "Pending").ToList());
         }
 
-        // Method to add a custom tag
         private void AddCustomTag()
         {
-            try
+            if (!string.IsNullOrWhiteSpace(customTag) && !availableTags.Contains(customTag))
             {
-                if (!string.IsNullOrWhiteSpace(customTag) && !availableTags.Contains(customTag))
-                {
-                    availableTags.Add(customTag);
-                    customTag = "";
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error adding custom tag: {ex.Message}");
+                availableTags.Add(customTag);
+                customTag = string.Empty;
             }
         }
+
+        private void HandleTagSelection(ChangeEventArgs e)
+        {
+            if (e.Value is IEnumerable<object> selectedOptions)
+            {
+                selectedTags = selectedOptions.Cast<string>().ToList();
+            }
+        }
+
+        // Method to open the modal for adding a new transaction
+        private void OpenModal() => isModalOpen = true;
+
+        // Method to close the modal
+        private void CloseModal() => isModalOpen = false;
     }
 }

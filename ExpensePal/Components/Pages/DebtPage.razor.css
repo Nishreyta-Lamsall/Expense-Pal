@@ -26,7 +26,7 @@ body {
     }
 
     .table th {
-        background-color: #0a192f; /* Updated color */
+        background-color: #0a192f; 
         color: white;
         font-weight: bold;
     }
@@ -115,7 +115,7 @@ body {
     }
 
 .btn-primary {
-    background-color: #0a192f; /* Updated color */
+    background-color: #0a192f; 
     color: white;
     border: none;
 }

@@ -49,7 +49,7 @@ button {
     }
 
 .btn-primary {
-    background-color: #0a192f; /* Updated to #0a192f */
+    background-color: #0a192f; 
     border: none;
     color: white;
     padding: 10px 20px;
@@ -95,7 +95,7 @@ button {
     }
 
     .transactions-table th {
-        background-color: #0a192f; /* Updated to #0a192f */
+        background-color: #0a192f; 
         color: white;
         font-weight: bold;
     }
